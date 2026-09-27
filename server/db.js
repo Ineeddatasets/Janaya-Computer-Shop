@@ -13,6 +13,10 @@ export const config = {
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'janaya_shop',
+  // Some managed hosts (Aiven, PlanetScale, some Clever Cloud plans) require
+  // TLS on the wire. Set DB_SSL=true to turn it on. The cert is trusted by CA
+  // chain like any browser would, so no certificate needs to ship with the app.
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : undefined,
 }
 
 export const pool = mysql.createPool({
