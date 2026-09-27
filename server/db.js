@@ -22,7 +22,9 @@ export const config = {
 export const pool = mysql.createPool({
   ...config,
   waitForConnections: true,
-  connectionLimit: 10,
+  // Free MySQL tiers commonly cap at 5 concurrent connections. Set
+  // DB_POOL_SIZE higher when the host allows it.
+  connectionLimit: Number(process.env.DB_POOL_SIZE) || 4,
   // DECIMAL columns come back as JS numbers rather than strings, so money and
   // stock arrive already typed. Peso values stay well inside the safe range.
   decimalNumbers: true,
