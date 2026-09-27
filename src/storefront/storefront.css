@@ -1,0 +1,168 @@
+/*
+ * Storefront design tokens.
+ *
+ * A quiet, near-monochrome system: white paper, near-black ink, one warm
+ * off-white for banded sections, and a single green reserved for live status.
+ * Colour never carries meaning on its own here; it is all type and space.
+ */
+
+.sf {
+  /* Aliases onto the one palette declared in src/index.css, so the storefront
+     and the staff system can never drift apart. */
+  --ink: var(--color-ink);
+  --ink-2: var(--color-ink-2);
+  --ink-3: var(--color-ink-3);
+  --paper: var(--color-paper);
+  --mist: var(--color-mist);
+  --line: var(--color-line);
+  --panel: var(--color-panel);
+  --panel-2: var(--color-panel-2);
+  --live: var(--color-good);
+
+  --r-lg: 28px;
+  --r-md: 18px;
+  --r-sm: 12px;
+
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Type scale. Display sizes carry tight negative tracking, the way the
+   reference does; body text stays at normal tracking so it reads easily. */
+.sf-display {
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 6.4vw, 5.1rem);
+  line-height: 0.98;
+  letter-spacing: -0.038em;
+  font-weight: 600;
+}
+
+.sf-h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.85rem, 3.4vw, 2.7rem);
+  line-height: 1.06;
+  letter-spacing: -0.024em;
+  font-weight: 600;
+}
+
+.sf-h3 {
+  font-size: clamp(1.15rem, 1.6vw, 1.4rem);
+  line-height: 1.2;
+  letter-spacing: -0.018em;
+  font-weight: 600;
+}
+
+.sf-lead {
+  font-size: clamp(1rem, 1.25vw, 1.15rem);
+  line-height: 1.55;
+  /* No colour here on purpose: it would outrank the Tailwind text utilities
+     used to flip this copy to white on the dark bands. */
+}
+
+.sf-eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.sf-num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+}
+
+/* Scroll reveal. Everything starts settled if the visitor prefers less motion. */
+.sf-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sf-reveal[data-shown='true'] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .sf * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* A hairline that fades at both ends, used to divide bands softly. */
+.sf-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line) 12%, var(--line) 88%, transparent);
+}
+
+/* Marquee for the brand strip. */
+@keyframes sf-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.sf-marquee {
+  animation: sf-marquee 38s linear infinite;
+}
+
+.sf-marquee-mask {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+/* The soft breathing glow behind the hero machine. */
+@keyframes sf-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.sf-pulse {
+  animation: sf-pulse 6s ease-in-out infinite;
+}
+
+.sf-live-dot {
+  position: relative;
+}
+
+.sf-live-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  border: 1px solid var(--live);
+  opacity: 0;
+  animation: sf-ping 2.6s ease-out infinite;
+}
+
+@keyframes sf-ping {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.7;
+  }
+  70%,
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}

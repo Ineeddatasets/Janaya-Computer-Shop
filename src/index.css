@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+/*
+ * One palette for the whole product.
+ *
+ * The storefront and the staff system share it: white paper, near-black ink,
+ * a warm off-white for banded surfaces, and a hairline rule. Colour is not
+ * used to label modules any more; it is reserved for stock and delivery
+ * status, where it actually carries meaning.
+ */
+@theme {
+  --color-ink: #0a0a0a;
+  --color-ink-2: #3d3d3b;
+  --color-ink-3: #77756f;
+  --color-paper: #ffffff;
+  --color-mist: #f4f3f0;
+  --color-line: #e6e4df;
+  --color-panel: #0c0c0e;
+  --color-panel-2: #17171b;
+
+  /* Status. These four are the only colours that mean something. */
+  --color-good: #12a150;
+  --color-warn: #b07500;
+  --color-bad: #c02626;
+
+  --font-sans: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+  /* Display type is set in Inter Tight: narrower and cooler at large sizes,
+     which is what carries the tight tracking on headlines. */
+  --font-display: "Inter Tight", Inter, "Segoe UI", system-ui, sans-serif;
+
+  --radius-card: 18px;
+  --radius-panel: 28px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-mist);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Headings in this system all carry slight negative tracking. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.028em;
+}
+
+/* Oversized page type, shared by the storefront hero and the sign-in screen. */
+.display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.042em;
+}
+
+/* Tabular figures keep money columns aligned down the page */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The receipt is the only thing that should reach a printer */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  body {
+    background: #fff;
+  }
+  .print-sheet {
+    box-shadow: none !important;
+    border: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+  @page {
+    margin: 12mm;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
