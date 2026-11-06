@@ -41,17 +41,38 @@ export function ShopProvider({ children }) {
 
     setLoading(true)
     const isOwner = user.role === 'owner'
-    Promise.all([
-      api.listProducts(),
-      api.listCustomers(),
-      api.listSales(),
-      // Suppliers and purchase orders belong to the owner's modules. The API
-      // refuses them for a cashier, so the cashier's app does not ask.
-      isOwner ? api.listSuppliers() : Promise.resolve([]),
-      isOwner ? api.listPurchaseOrders() : Promise.resolve([]),
-    ])
-      .then(([p, c, sl, s, po]) => set(p, c, s, po, sl))
-      .catch(() => set([], [], [], [], []))
+
+    // Retried for the same reason the storefront retries: on a free host the
+    // server sleeps, and the first call after a nap can fail. Giving up
+    // quietly would leave the owner staring at an empty inventory.
+    const loadOnce = () =>
+      Promise.all([
+        api.listProducts(),
+        api.listCustomers(),
+        api.listSales(),
+        // Suppliers and purchase orders belong to the owner's modules. The API
+        // refuses them for a cashier, so the cashier's app does not ask.
+        isOwner ? api.listSuppliers() : Promise.resolve([]),
+        isOwner ? api.listPurchaseOrders() : Promise.resolve([]),
+      ])
+
+    ;(async () => {
+      const waits = [1000, 2000, 4000, 8000]
+      for (let attempt = 0; attempt <= waits.length; attempt++) {
+        try {
+          const [p, c, sl, s, po] = await loadOnce()
+          set(p, c, s, po, sl)
+          return
+        } catch {
+          if (cancelled) return
+          if (attempt === waits.length) {
+            set([], [], [], [], [])
+            return
+          }
+          await new Promise((r) => setTimeout(r, waits[attempt]))
+        }
+      }
+    })()
     return () => {
       cancelled = true
     }

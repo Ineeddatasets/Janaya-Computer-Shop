@@ -21,7 +21,7 @@ import './storefront.css'
 /* Hero                                                                */
 /* ------------------------------------------------------------------ */
 
-function Hero({ liveCount }) {
+function Hero({ liveCount, status }) {
   return (
     <div className="px-3 pt-3 sm:px-4 sm:pt-4">
       <div className="relative isolate overflow-hidden rounded-[var(--r-lg)] bg-[var(--panel)]">
@@ -72,7 +72,9 @@ function Hero({ liveCount }) {
         <div className="absolute inset-x-0 bottom-6 flex justify-center px-5">
           <Reveal delay={340}>
             <StatusPill>
-              {liveCount
+              {status === 'waking'
+                ? 'Waking the shop up, one moment…'
+                : liveCount
                 ? liveCount + ' machines and parts in stock today'
                 : 'Open today until 7pm'}
             </StatusPill>
@@ -89,12 +91,40 @@ function Hero({ liveCount }) {
 
 export function Storefront() {
   const [products, setProducts] = useState([])
+  const [status, setStatus] = useState('loading')
 
   // The storefront reads the catalogue directly rather than through
   // ShopContext, because it is a public page with no signed-in session.
+  //
+  // The retry matters more than it looks. On a free host the server sleeps
+  // when idle and takes most of a minute to wake, so the very first request a
+  // visitor makes can fail. Without this the catalogue silently stayed empty
+  // and the shop looked like it had no stock.
   useEffect(() => {
     let cancelled = false
-    api.listProducts().then((rows) => !cancelled && setProducts(rows))
+    const waits = [1000, 2000, 4000, 8000, 12000]
+
+    async function load() {
+      for (let attempt = 0; attempt <= waits.length; attempt++) {
+        try {
+          const rows = await api.listProducts()
+          if (cancelled) return
+          setProducts(rows)
+          setStatus('ready')
+          return
+        } catch {
+          if (cancelled) return
+          if (attempt === waits.length) {
+            setStatus('failed')
+            return
+          }
+          setStatus('waking')
+          await new Promise((r) => setTimeout(r, waits[attempt]))
+        }
+      }
+    }
+
+    load()
     return () => {
       cancelled = true
     }
@@ -106,7 +136,19 @@ export function Storefront() {
     <div className="sf">
       <Nav />
       <main>
-        <Hero liveCount={inStock} />
+        {status === 'failed' && (
+          <div className="bg-[var(--ink)] px-5 py-3 text-center text-sm text-white">
+            The catalogue could not be loaded just now.{' '}
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="underline underline-offset-2"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+        <Hero liveCount={inStock} status={status} />
         <BrandStrip />
         <Promise_ />
         <HowItWorks />

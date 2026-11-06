@@ -16,6 +16,7 @@ import {
 } from '../components/ui/Primitives.jsx'
 import { DataTable } from '../components/ui/DataTable.jsx'
 import { ConfirmDialog, Modal } from '../components/ui/Modal.jsx'
+import { ImageUpload } from '../components/ui/ImageUpload.jsx'
 import { ProductImage } from '../storefront/productArt.jsx'
 
 const BLANK = {
@@ -27,6 +28,8 @@ const BLANK = {
   price: '',
   stock: '',
   reorderPoint: '',
+  image: null,
+  art: 'tower',
 }
 
 export function Products() {
@@ -306,6 +309,14 @@ export function Products() {
         }
       >
         <form id="product-form" onSubmit={save} className="grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <ImageUpload
+              value={form.image}
+              art={form.art}
+              name={form.name}
+              onChange={(image) => setForm({ ...form, image })}
+            />
+          </div>
           <Field label="SKU" required>
             <Input
               required

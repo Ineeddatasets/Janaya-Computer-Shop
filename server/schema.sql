@@ -65,7 +65,9 @@ CREATE TABLE products (
   stock         INT           NOT NULL DEFAULT 0,
   reorder_point INT           NOT NULL DEFAULT 0,
   art           VARCHAR(32)   NOT NULL DEFAULT 'tower',
-  image         TEXT          NULL,
+  -- MEDIUMTEXT, not TEXT: an uploaded photo is stored inline as a data URL
+  -- and TEXT's 64 KB ceiling is too low for one.
+  image         MEDIUMTEXT    NULL,
   CONSTRAINT fk_products_supplier FOREIGN KEY (supplier_id)
     REFERENCES suppliers (id) ON DELETE SET NULL,
   INDEX idx_products_category (category)

@@ -13,6 +13,35 @@ import { asyncHandler, HttpError } from '../util.js'
  */
 export const productsRouter = Router()
 
+/**
+ * The picture may be left empty, point at an https URL, or carry an uploaded
+ * photo inline as a data URL. The browser already shrinks uploads, but the
+ * server is the one that has to be sure: an oversized row would eat the
+ * database's small storage budget, and the column itself has a ceiling.
+ */
+const MAX_IMAGE_BYTES = 200 * 1024
+
+function cleanImage(value) {
+  if (value === undefined) return undefined
+  if (value === null || value === '') return null
+
+  if (typeof value !== 'string') throw new HttpError(400, 'That photo could not be read.')
+
+  if (/^https:\/\//i.test(value)) {
+    if (value.length > 2048) throw new HttpError(400, 'That image link is too long.')
+    return value
+  }
+
+  if (/^data:image\/(jpeg|png|webp|avif);base64,/i.test(value)) {
+    if (value.length > MAX_IMAGE_BYTES) {
+      throw new HttpError(400, 'That photo is too large. Please choose a smaller one.')
+    }
+    return value
+  }
+
+  throw new HttpError(400, 'A photo must be an uploaded image or an https link.')
+}
+
 async function findProduct(runner, id) {
   const [rows] = await runner.query('SELECT * FROM products WHERE id = ?', [id])
   if (!rows[0]) throw new HttpError(404, 'Product not found.')
@@ -54,7 +83,7 @@ productsRouter.post(
           Number(b.stock) || 0,
           Number(b.reorderPoint) || 0,
           b.art || 'tower',
-          b.image || null,
+          cleanImage(b.image) ?? null,
         ],
       )
       return findProduct(conn, id)
@@ -87,7 +116,8 @@ productsRouter.patch(
     for (const [key, column] of Object.entries(EDITABLE)) {
       if (b[key] === undefined) continue
       sets.push(`${column} = ?`)
-      if (NUMERIC.has(key)) values.push(Number(b[key]) || 0)
+      if (key === 'image') values.push(cleanImage(b[key]) ?? null)
+      else if (NUMERIC.has(key)) values.push(Number(b[key]) || 0)
       else if (key === 'supplierId') values.push(b[key] || null)
       else values.push(b[key])
     }
